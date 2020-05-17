@@ -43,7 +43,7 @@ void* kernel(void* args) {
     struct pthread_args *arg = (struct pthread_args*) args;
 
  	// Type Casting
- 	unsigned char (*image_local)[arg->x_resolution][3] = ((unsigned char (*)[arg->x_resolution][3]) arg->image); 	
+ 	unsigned char (*image_local) = ((unsigned char (*)) arg->image); 	
 
     using namespace std::complex_literals;
 
@@ -84,10 +84,10 @@ void* kernel(void* args) {
 
             if(!arg->no_output) {
                 if (k == arg->max_iter) {
-                    memcpy(image_local[OFFSET(i, j, 0)], black, 3);
+                    memcpy(&image_local[OFFSET(i, j, 0)], black, 3);
                 } else {
                     int index = (k + arg->palette_shift) % (sizeof(colors) / sizeof(colors[0]));
-                    memcpy(image_local[OFFSET(i, j, 0)], colors[index], 3);
+                    memcpy(&image_local[OFFSET(i, j, 0)], colors[index], 3);
                 }
             }
         }
@@ -201,19 +201,19 @@ int main(int argc, char **argv) {
         fprintf(stderr, "No output will be written\n");
 
     getProblemFromInput(&power);
-    printf("Check");
 
     /// Perosonal Code
 
-    int num_threads = 8;
+    int num_threads = 128;
     int numSamplesInSet = 0;
 
-    printf("Check");
     pthread_t *threads = (pthread_t*) malloc (num_threads *sizeof(pthread_t));
-    printf("Check");
 
 	// Creating Local copy of Variables for each of the threads
 	struct pthread_args* args = (struct pthread_args*) malloc (num_threads*sizeof (struct pthread_args));
+
+    // Pass the args as argument to the threads
+    clock_gettime(CLOCK_MONOTONIC, &begin);
 
 	for (int i = 0; i < num_threads; ++i) {
  		// Allocating Local Variables for each of the threads		
@@ -239,27 +239,21 @@ int main(int argc, char **argv) {
  		args[i].end_point   =  args[i].start_point + y_res/num_threads;
  		if (i == num_threads-1){
  			args[i].end_point   =  args[i].start_point + y_res/num_threads + (y_resolution%num_threads);
- 		}
- 		printf("Check");
- 		// Pass the args as argument to the threads
-        clock_gettime(CLOCK_MONOTONIC, &begin);
+ 		}    		
  		pthread_create(&threads[i], NULL, kernel, args+i); // passing args[i] to threads[i]
-        clock_gettime(CLOCK_MONOTONIC, &end);
-
-        numSamplesInSet += args[i].pointsInSetCount;
-
 
  	}
     for (int i = 0; i < num_threads; ++i) {
  		pthread_join(threads[i], NULL);
  	}
+    clock_gettime(CLOCK_MONOTONIC, &end);
+
+    for (int i = 0; i < num_threads; ++i) {
+ 		numSamplesInSet += args[i].pointsInSetCount;
+ 	}
 
     free(threads);	
-    free(args);
-    ///
-
-
-    
+    free(args);    
     
     outputSolution(numSamplesInSet);
 
