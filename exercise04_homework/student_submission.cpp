@@ -272,8 +272,6 @@ int main(int argc, char *argv[]) {
 
         // Receive the problem from the system.
         Utility::generateProblem(seed + problem, *curProblemData);
-        float backupWaveField[1][MAP_SIZE][MAP_SIZE];
-        float (*backupWavePointer)[MAP_SIZE][MAP_SIZE] = &backupWaveField[0];
 
         if(TIME_STEPS >= 2)
         {
@@ -287,11 +285,6 @@ int main(int argc, char *argv[]) {
                 {
                     // std::cerr << "Simulating storms" << std::endl;
                     // First simulate all cycles of the storm
-                    auto *tmp = problemData->secondLastWaveIntensity;
-                    problemData->secondLastWaveIntensity = problemData->lastWaveIntensity;
-                    problemData->lastWaveIntensity = problemData->currentWaveIntensity;
-                    problemData->currentWaveIntensity = backupWavePointer;
-                    backupWavePointer = tmp;
                     simulate_waves(*problemData, t + 1);
                 }
 
@@ -315,12 +308,16 @@ int main(int argc, char *argv[]) {
                 break;
             }
 
+            auto *tmp = curProblemData->secondLastWaveIntensity;
             curProblemData->secondLastWaveIntensity = problemData->secondLastWaveIntensity;
             curProblemData->lastWaveIntensity = problemData->lastWaveIntensity;
             curProblemData->currentWaveIntensity = problemData->currentWaveIntensity;
+            problemData->secondLastWaveIntensity = problemData->lastWaveIntensity;
+            problemData->lastWaveIntensity = problemData->currentWaveIntensity;
+            problemData->currentWaveIntensity = tmp;
 
             // Rotates the buffers, recycling no longer needed data buffers for writing new data.
-            problemData->flipSearchBuffers();
+            curProblemData->flipSearchBuffers();
         }
         // Submit our solution back to the system.
         Utility::writeOutput(pathLength);
