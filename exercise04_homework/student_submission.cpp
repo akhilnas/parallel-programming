@@ -260,7 +260,6 @@ int main(int argc, char *argv[]) {
      * TODO@Students: On the submission server, we are solving more than just one problem
      */
     
-    omp_set_nested(1);
 
     for (int problem = 0; problem < numProblems; ++problem) {
         auto *problemData = new ProblemData();
@@ -270,7 +269,8 @@ int main(int argc, char *argv[]) {
         // Receive the problem from the system.
         Utility::generateProblem(seed + problem, *problemData);
 
-
+        
+        void omp_set_nested(int nested);
         std::cerr << "Searching from ship position (" << problemData->shipOrigin.x << ", " << problemData->shipOrigin.y
                   << ") to Port Royal (" << problemData->portRoyal.x << ", " << problemData->portRoyal.y << ")."
                   << std::endl;
