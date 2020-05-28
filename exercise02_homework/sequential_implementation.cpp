@@ -193,12 +193,21 @@ int main(int argc, char **argv) {
             std::perror("fwrite");
             exit(EXIT_FAILURE);
         }
+<<<<<<< HEAD
+        for (int i = 0; i < y_resolution; ++i) {
+            for (int j = 0; j < x_resolution; ++j) {
+                fprintf(file, "%i %i %i ", image[OFFSET(i, j, 0)], image[OFFSET(i, j, 1)], image[OFFSET(i, j, 2)]);
+            }
+            fprintf(file, "\n");
+        } 
+=======
 //        for (int i = 0; i < y_resolution; ++i) {
 //            for (int j = 0; j < x_resolution; ++j) {
 //                fprintf(file, "%i %i %i ", image[OFFSET(i, j, 0)], image[OFFSET(i, j, 1)], image[OFFSET(i, j, 2)]);
 //            }
 //            fprintf(file, "\n");
 //        }
+>>>>>>> 2dbc0f006eede4b430d148dfd3a4c65d527f0aac
         fclose(file);
     }
 

@@ -3,21 +3,63 @@
 #include <cstdlib>
 #include <cstring>
 #include <complex>
+<<<<<<< HEAD
+#include <pthread.h>
+=======
+>>>>>>> 2dbc0f006eede4b430d148dfd3a4c65d527f0aac
 
 #include "mandelbrot_set.h"
 
 #define CHANNELS 3
 // Returns the one dimensional index into our pseudo 3D array
+<<<<<<< HEAD
+#define OFFSET(y, x, c) (y * arg->x_resolution * CHANNELS + x * CHANNELS + c)
+=======
 #define OFFSET(y, x, c) (y * x_resolution * CHANNELS + x * CHANNELS + c)
+>>>>>>> 2dbc0f006eede4b430d148dfd3a4c65d527f0aac
 
 /*
  * TODO@Students: This is your kernel. Take a look at any dependencies and decide how to parallelize it.
  */
+<<<<<<< HEAD
+
+struct pthread_args
+{
+ int x_resolution; 
+ int y_resolution; 
+ int max_iter;	                
+ double view_x0; 
+ double view_x1; 
+ double view_y0; 
+ double view_y1;
+ double x_stepsize; 
+ double y_stepsize;
+ int palette_shift; 
+ void* image; 
+ double power;
+ bool no_output;
+
+ int start_point;
+ int end_point;
+
+ int pointsInSetCount;
+
+ }; 
+
+void* kernel(void* args) {
+
+    struct pthread_args *arg = (struct pthread_args*) args;
+
+ 	// Type Casting
+ 	unsigned char (*image_local) = ((unsigned char (*)) arg->image); 	
+
+=======
 int mandelbrot_draw(int x_resolution, int y_resolution, int max_iter,
                     double view_x0, double view_x1, double view_y0, double view_y1,
                     double x_stepsize, double y_stepsize,
                     int palette_shift, unsigned char *img,
                     double power, bool no_output) {
+>>>>>>> 2dbc0f006eede4b430d148dfd3a4c65d527f0aac
     using namespace std::complex_literals;
 
     double y;
@@ -31,10 +73,17 @@ int mandelbrot_draw(int x_resolution, int y_resolution, int max_iter,
     int pointsInSetCount = 0;
 
     // For each pixel in the image
+<<<<<<< HEAD
+    for (int i = arg->start_point; i < arg->end_point; i++) {
+        for (int j = 0; j < arg->x_resolution; j++) {
+            y = arg->view_y1 - i * arg->y_stepsize;
+            x = arg->view_x0 + j * arg->x_stepsize;
+=======
     for (int i = 0; i < y_resolution; i++) {
         for (int j = 0; j < x_resolution; j++) {
             y = view_y1 - i * y_stepsize;
             x = view_x0 + j * x_stepsize;
+>>>>>>> 2dbc0f006eede4b430d148dfd3a4c65d527f0aac
 
             Z = 0.0 + 0.0i;
             C = x + y * 1.0i;
@@ -44,13 +93,31 @@ int mandelbrot_draw(int x_resolution, int y_resolution, int max_iter,
             // Apply the Mandelbrot calculation until the absolute value >= 2 (meaning the calculation will diverge to
             // infinity) or the maximum number of iterations was reached.
             do {
+<<<<<<< HEAD
+                Z = std::pow(Z, arg->power) + C;
+                k++;
+            } while (std::abs(Z) < 2 && k < arg->max_iter);
+=======
                 Z = std::pow(Z, power) + C;
                 k++;
             } while (std::abs(Z) < 2 && k < max_iter);
+>>>>>>> 2dbc0f006eede4b430d148dfd3a4c65d527f0aac
 
             // If the maximum number of iterations was reached then this point is in the Mandelbrot set and we color it
             // black. Else, it is outside and we color it with a color that corresponds to how many iterations there
             // were before we confirmed the divergence.
+<<<<<<< HEAD
+            if (k == arg->max_iter) {
+                pointsInSetCount++;
+            }
+
+            if(!arg->no_output) {
+                if (k == arg->max_iter) {
+                    memcpy(&image_local[OFFSET(i, j, 0)], black, 3);
+                } else {
+                    int index = (k + arg->palette_shift) % (sizeof(colors) / sizeof(colors[0]));
+                    memcpy(&image_local[OFFSET(i, j, 0)], colors[index], 3);
+=======
             if (k == max_iter) {
                 pointsInSetCount++;
             }
@@ -61,12 +128,18 @@ int mandelbrot_draw(int x_resolution, int y_resolution, int max_iter,
                 } else {
                     int index = (k + palette_shift) % (sizeof(colors) / sizeof(colors[0]));
                     memcpy(&img[OFFSET(i, j, 0)], colors[index], 3);
+>>>>>>> 2dbc0f006eede4b430d148dfd3a4c65d527f0aac
                 }
             }
         }
     }
 
+<<<<<<< HEAD
+    arg->pointsInSetCount = pointsInSetCount;
+    return NULL;
+=======
     return pointsInSetCount;
+>>>>>>> 2dbc0f006eede4b430d148dfd3a4c65d527f0aac
 }
 
 
@@ -75,6 +148,10 @@ int main(int argc, char **argv) {
     /*
      * TODO@Students: Decide how many threads will get you an appropriate speedup.
      */
+<<<<<<< HEAD
+    
+=======
+>>>>>>> 2dbc0f006eede4b430d148dfd3a4c65d527f0aac
     double power = 1.0;
     int max_iter = 50; // sizeof(colors);
     int x_resolution = 256;
@@ -173,6 +250,61 @@ int main(int argc, char **argv) {
 
     getProblemFromInput(&power);
 
+<<<<<<< HEAD
+    /// Perosonal Code
+
+    int num_threads = 128;
+    int numSamplesInSet = 0;
+
+    pthread_t *threads = (pthread_t*) malloc (num_threads *sizeof(pthread_t));
+
+	// Creating Local copy of Variables for each of the threads
+	struct pthread_args* args = (struct pthread_args*) malloc (num_threads*sizeof (struct pthread_args));
+
+    // Pass the args as argument to the threads
+    clock_gettime(CLOCK_MONOTONIC, &begin);
+
+	for (int i = 0; i < num_threads; ++i) {
+ 		// Allocating Local Variables for each of the threads		
+ 		args[i].y_resolution = y_resolution;
+ 		args[i].max_iter = max_iter;
+ 		args[i].x_stepsize = x_stepsize;
+ 		args[i].y_stepsize = y_stepsize;
+ 		args[i].palette_shift = palette_shift;
+ 		args[i].x_resolution = x_resolution;
+ 		args[i].view_x0 = view_x0;
+ 		args[i].view_y0 = view_y0;
+ 		args[i].view_y1 = view_y1;
+ 		args[i].view_x1 = view_x1;
+ 		args[i].image   = image; 	
+        args[i].power = power;
+        args[i].no_output = no_output;
+        args[i].pointsInSetCount = numSamplesInSet;
+
+        // Temporary Variable fwf
+ 		int y_res = y_resolution - (y_resolution%num_threads);
+ 		// Start Point & End-Point of Calculation for Each Thread
+ 		args[i].start_point =  (i * ((y_res/num_threads)));
+ 		args[i].end_point   =  args[i].start_point + y_res/num_threads;
+ 		if (i == num_threads-1){
+ 			args[i].end_point   =  args[i].start_point + y_res/num_threads + (y_resolution%num_threads);
+ 		}    		
+ 		pthread_create(&threads[i], NULL, kernel, args+i); // passing args[i] to threads[i]
+
+ 	}
+    for (int i = 0; i < num_threads; ++i) {
+ 		pthread_join(threads[i], NULL);
+ 	}
+    clock_gettime(CLOCK_MONOTONIC, &end);
+
+    for (int i = 0; i < num_threads; ++i) {
+ 		numSamplesInSet += args[i].pointsInSetCount;
+ 	}
+
+    free(threads);	
+    free(args);    
+    
+=======
 
     clock_gettime(CLOCK_MONOTONIC, &begin);
     // compute mandelbrot
@@ -180,6 +312,7 @@ int main(int argc, char **argv) {
                                           view_x0, view_x1, view_y0, view_y1,
                                           x_stepsize, y_stepsize, palette_shift, image, power, no_output);
     clock_gettime(CLOCK_MONOTONIC, &end);
+>>>>>>> 2dbc0f006eede4b430d148dfd3a4c65d527f0aac
     outputSolution(numSamplesInSet);
 
     if (!no_output) {
